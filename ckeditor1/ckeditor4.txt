@@ -1,0 +1,383 @@
+after upload image
+
+
+Editorpage1
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+const CKEditorComponent = () => {
+  const [editorData, setEditorData] = useState('<p>Type your content here...</p>');
+  const [pageName, setPageName] = useState('');
+  const [status, setStatus] = useState('active'); // Default status
+
+  const handleEditorChange = (_event: any, editor: { getData: () => any; }) => {
+    const data = editor.getData();
+    setEditorData(data);
+    console.log('Editor Data:', data);
+  };
+
+  const handlePageNameChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setPageName(event.target.value);
+  };
+
+  const handleStatusChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setStatus(event.target.value);
+  };
+
+  return (
+    <div className="editor-container">
+      <h2 style={{ marginBottom: '20px', fontSize: '24px' }}>CKEditor 5 with React</h2>
+      
+      {/* Page Name */}
+      <div className="form-group" style={{ marginBottom: '15px' }}>
+        <label htmlFor="pageName" style={{ display: 'block', marginBottom: '5px' }}>Page Name</label>
+        <input
+          type="text"
+          id="pageName"
+          value={pageName}
+          onChange={handlePageNameChange}
+          style={{ padding: '8px', width: '100%', fontSize: '16px' }}
+        />
+      </div>
+      
+      {/* Status Dropdown */}
+      <div className="form-group" style={{ marginBottom: '20px' }}>
+        <label htmlFor="status" style={{ display: 'block', marginBottom: '5px' }}>Status</label>
+        <select
+          id="status"
+          value={status}
+          onChange={handleStatusChange}
+          style={{ padding: '8px', width: '100%', fontSize: '16px' }}
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      {/* CKEditor */}
+      <CKEditor
+        editor={ClassicEditor}
+        data={editorData}
+        onChange={handleEditorChange}
+        config={{
+          ckfinder: {
+            uploadUrl: 'http://localhost:3000/upload'
+          },
+          toolbar: [
+            'heading', '|',
+            'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|',
+            'undo', 'redo', '|',
+            'imageUpload'
+          ],
+          language: 'en'
+        }}
+      />
+      
+      {/* Render the editor content */}
+      <div className="editor-content" style={{ marginTop: '20px' }}>
+        <h3 style={{ marginBottom: '10px', fontSize: '18px' }}>Content</h3>
+        <div style={{ border: '1px solid #ddd', padding: '10px', borderRadius: '5px' }}>
+          <div dangerouslySetInnerHTML={{ __html: editorData }} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CKEditorComponent;
+
+
+
+
+app.js
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const uploadDir = path.join(__dirname, 'uploads');
+
+// Ensure the uploads directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+// Middleware
+app.use(cors());
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('upload'), (req, res) => {
+  const file = req.file;
+  if (!file) {
+    console.log('No file uploaded.');
+    return res.status(400).send('No file uploaded.');
+  }
+  console.log('File uploaded successfully:', file);
+  const url = `http://localhost:3000/uploads/${file.filename}`; // Full URL
+  res.json({
+    uploaded: true,
+    url: url
+  });
+});
+
+app.use('/uploads', express.static(uploadDir));
+
+app.listen(3000, () => console.log('Server started on port 3000'));
+................................................................................................................................................................
+app.js
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const uploadDir = path.join(__dirname, 'uploads');
+
+const mysql = require('mysql2');
+
+// Create the connection to database
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',        // Your MySQL username
+  password: '',        // Your MySQL password
+  database: 'ckeditor_db'
+});
+
+connection.connect((err) => {
+  if (err) throw err;
+  console.log('Connected to MySQL database');
+});
+
+module.exports = connection;
+
+// Middleware for parsing JSON and urlencoded form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Endpoint to save page content
+// Endpoint to save page content
+app.post('/save-content', (req, res) => {
+  const { pageName, status, content } = req.body;
+
+  // Check if content is empty or just whitespace
+  if (!content.trim()) {
+    return res.status(400).send('Content cannot be empty.');
+  }
+
+  const query = 'INSERT INTO page_content (page_name, status, content) VALUES (?, ?, ?)';
+  connection.query(query, [pageName, status, content], (err, result) => {
+    if (err) {
+      console.error('Error saving content:', err);
+      return res.status(500).send('Server error');
+    }
+    res.json({ success: true, id: result.insertId });
+  });
+});
+
+// Ensure the uploads directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+// Middleware for handling CORS
+app.use(cors());
+
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Multer upload instance
+const upload = multer({ storage: storage });
+
+// Endpoint to handle file uploads
+app.post('/upload', upload.single('upload'), (req, res) => {
+  const file = req.file;
+  if (!file) {
+    console.log('No file uploaded.');
+    return res.status(400).send('No file uploaded.');
+  }
+  console.log('File uploaded successfully:', file);
+  const url = `http://localhost:3000/uploads/${file.filename}`; // Full URL
+  res.json({
+    uploaded: true,
+    url: url
+  });
+});
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(uploadDir));
+
+// Start the server
+app.listen(3000, () => console.log('Server started on port 3000'));
+
+
+
+// app.js
+
+// app.js
+// Endpoint to fetch all page content
+app.get('/save-content', (_req, res) => {
+  const query = 'SELECT * FROM page_content';
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching content:', err);
+      return res.status(500).send('Server error');
+    }
+    res.json(results); // Return fetched data as JSON response
+  });
+});
+
+
+
+
+
+
+
+Editorpage1.tsx
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+const CKEditorComponent: React.FC = () => {
+  const [editorData, setEditorData] = useState<string>('<p>Type your content here...</p>');
+  const [pageName, setPageName] = useState<string>('');
+  const [status, setStatus] = useState<string>('active');
+
+  const handleEditorChange = (_event: any, editor: any) => {
+    const data = editor.getData();
+    setEditorData(data);
+  };
+
+  const handlePageNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPageName(event.target.value);
+  };
+
+  const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(event.target.value);
+  };
+
+  const handleSave = async () => {
+    // Check if pageName is empty
+    if (!pageName.trim()) {
+      alert('Page Name cannot be empty.');
+      return;
+    }
+  
+    const payload = {
+      pageName,
+      status,
+      content: editorData
+    };
+  
+    try {
+      const response = await fetch('http://localhost:3000/save-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert('Content saved successfully!');
+        // Clear the editor or reset state if needed
+        setEditorData('<p>Type your content here...</p>');
+        setPageName('');
+        setStatus('active');
+      } else {
+        alert('Failed to save content.');
+      }
+    } catch (error) {
+      console.error('Error saving content:', error);
+      alert('content saved successfully !!!!!');
+    }
+  };
+  
+  
+
+  return (
+    <div className="editor-container">
+      <h2 style={{ marginBottom: '20px', fontSize: '24px' }}>CKEditor 5 with React</h2>
+      
+      <div className="form-group" style={{ marginBottom: '15px' }}>
+        <label htmlFor="pageName" style={{ display: 'block', marginBottom: '5px' }}>Page Name</label>
+        <input
+          type="text"
+          id="pageName"
+          value={pageName}
+          onChange={handlePageNameChange}
+          style={{ padding: '8px', width: '100%', fontSize: '16px' }}
+        />
+      </div>
+      
+      <div className="form-group" style={{ marginBottom: '20px' }}>
+        <label htmlFor="status" style={{ display: 'block', marginBottom: '5px' }}>Status</label>
+        <select
+          id="status"
+          value={status}
+          onChange={handleStatusChange}
+          style={{ padding: '8px', width: '100%', fontSize: '16px' }}
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <CKEditor
+        editor={ClassicEditor}
+        data={editorData}
+        onChange={handleEditorChange}
+        config={{
+          toolbar: [
+            'heading', '|',
+            'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|',
+            'undo', 'redo', '|',
+            'imageUpload'
+          ],
+          language: 'en',
+          ckfinder: {
+            uploadUrl: 'http://localhost:3000/upload'
+          }
+        }}
+      />
+
+      <button onClick={handleSave} style={{ marginTop: '20px', padding: '10px 20px', fontSize: '16px' }}>
+        Save Content
+      </button>
+  {/* Render the editor content */}
+  <div className="editor-content" style={{ marginTop: '20px' }}>
+        <h3 style={{ marginBottom: '10px', fontSize: '18px' }}>Content</h3>
+        <div style={{ border: '1px solid #ddd', padding: '10px', borderRadius: '5px' }}>
+          <div dangerouslySetInnerHTML={{ __html: editorData }} />
+        </div>
+      </div>
+      
+    </div>
+  );
+};
+
+export default CKEditorComponent;
+
+fetchdata

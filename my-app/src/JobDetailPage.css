@@ -1,0 +1,141 @@
+/* JobDetailPage.css */
+
+.job-container {
+    width: 100%;
+    padding: 20px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: flex-start;
+    flex-direction: column; /* Stack items vertically */
+}
+
+.job-card {
+    max-width: 800px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    margin: 0 auto; /* Center horizontally */
+}
+
+.logo-box {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.company-logo {
+    width: 150px;
+    height: 150px;
+    border-radius: 5px;
+    object-fit: contain;
+}
+
+.job-details {
+    margin-bottom: 20px;
+}
+
+.job-title-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.job-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.job-detail-item {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.job-detail-item strong {
+    font-weight: bold;
+    color: #3d3b3b;
+}
+
+.job-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.delete-button {
+    background-color: #d9534f;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.delete-button:hover {
+    background-color: #c9302c;
+}
+
+@media (max-width: 768px) {
+    .job-card {
+        padding: 15px;
+    }
+
+    .company-logo {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+.edit-button {
+    background-color: #002088;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.edit-button:hover {
+    background-color: #2501a5;
+}
+
+.company-jobs-container {
+    width: 100%; /* Full width */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    background-color: rgb(255, 255, 255);
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.company-jobs {
+    max-width: 800px; /* Limit width if needed */
+    background-color: #edf0f0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.company-jobs h2 {
+    font-size: 20px;
+    color: #000000;
+    margin-bottom: 10px;
+}
+
+.company-job-item {
+    margin-bottom: 10px;
+}
+
+.company-job-link {
+    color: #020202;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.company-job-link:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,630 @@
+ckeditor1
+
+app.js for backend
+const express = require('express');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+const cors = require('cors');
+
+const app = express();
+const port = 3001;
+
+app.use(cors());
+app.use(bodyParser.json());
+
+// Create a connection to the database
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'editorpage',
+});
+
+// Connect to the database
+db.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database:', err);
+    return;
+  }
+  console.log('Connected to the MySQL database.');
+});
+
+// API endpoint to save page details
+app.post('/EditorPage', (req, res) => {
+  const { pageName, content, status } = req.body;
+
+  const query = 'INSERT INTO pages (pageName, content, status) VALUES (?, ?, ?)';
+  db.query(query, [pageName, content, status], (err, result) => {
+    if (err) {
+      console.error('Error inserting data:', err);
+      res.status(500).send('Error inserting data');
+      return;
+    }
+    res.status(200).send('Page saved successfully!');
+  });
+});
+
+
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+
+
+
+
+// API endpoint to fetch page details
+app.get('/EditorPage', (req, res) => {
+    const query = 'SELECT id, pageName, content, status FROM pages';
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error fetching data:', err);
+        res.status(500).send('Error fetching data');
+        return;
+      }
+      res.status(200).json(results);
+    });
+  });
+
+EditorPage.tsx
+// src/pages/EditorPage.tsx
+import React, { useState } from 'react';
+import { TextField, FormControl, Select, MenuItem, Button, Box, SelectChangeEvent, Typography } from '@mui/material';
+import axios from 'axios';
+import CKEditorComponent from '../components/CKEditorComponent';
+
+const EditorPage: React.FC = () => {
+  const [pageName, setPageName] = useState<string>('');
+  const [status, setStatus] = useState<string>('Active');
+  const [content, setContent] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+
+  
+
+  // Function to fetch pages from API
+
+  const handleEditorChange = (content: string) => {
+    console.log('Editor content:', content);
+    setContent(content);
+  };
+
+  const handlePageNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPageName(event.target.value);
+  };
+
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
+    setStatus(event.target.value as string);
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+
+    if (!pageName.trim()) {
+      setError('Page Name is required.');
+      return;
+    }
+
+    if (!content.trim()) {
+      setError('Content is required.');
+      return;
+    }
+
+    if (!status) {
+      setError('Status is required.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:3001/EditorPage', {
+        pageName,
+        content,
+        status
+      });
+      console.log(response.data);
+      alert('Page saved successfully!');
+      setPageName('');
+      setContent('');
+      setStatus('Active');
+    } catch (error) {
+      console.error('Error saving page:', error);
+      setError('Failed to save page. Please try again.');
+    }
+  };
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Editor Page
+      </Typography>
+
+      {error && (
+        <Typography variant="body1" color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Page Name
+        </Typography>
+        <TextField
+          variant="outlined"
+          fullWidth
+          value={pageName}
+          onChange={handlePageNameChange}
+          sx={{ mb: 2 }}
+          error={!pageName.trim() && Boolean(error)}
+          helperText={!pageName.trim() && Boolean(error) ? 'Page Name is required.' : ''}
+        />
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Page Content
+        </Typography>
+        <CKEditorComponent onChange={handleEditorChange} initialValue={content} />
+        {!content.trim() && Boolean(error) && (
+          <Typography variant="body2" color="error">
+            Content is required.
+          </Typography>
+        )}
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Status
+        </Typography>
+        <FormControl variant="outlined" fullWidth error={!status && Boolean(error)}>
+          <Select
+            value={status}
+            onChange={handleStatusChange}
+            displayEmpty
+          >
+            <MenuItem value="Active">Active</MenuItem>
+            <MenuItem value="Inactive">Inactive</MenuItem>
+            <MenuItem value="Pending">Pending</MenuItem>
+          </Select>
+          {!status && Boolean(error) && (
+            <Typography variant="body2" color="error">
+              Status is required.
+            </Typography>
+          )}
+        </FormControl>
+      </Box>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSubmit}
+        sx={{ mt: 3 }}
+      >
+        Save
+      </Button>
+    </Box>
+  );
+};
+
+export default EditorPage;
+
+
+
+CKEditorComponent.tsx
+
+// src/components/CKEditorComponent.tsx
+
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+interface CKEditorComponentProps {
+  onChange: (content: string) => void;
+  initialValue?: string;
+}
+
+const CKEditorComponent: React.FC<CKEditorComponentProps> = ({ onChange, initialValue }) => {
+  const [editorContent, setEditorContent] = useState(initialValue || '');
+
+  const handleEditorChange = (_event: any, editor: any) => {
+    const data = editor.getData();
+    setEditorContent(data);
+    onChange(data);
+  };
+
+  return (
+    <CKEditor
+      editor={ClassicEditor}
+      data={editorContent}
+      onChange={handleEditorChange}
+    />
+  );
+};
+
+export default CKEditorComponent;
+
+
+
+
+FetchEditorPage.tsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const FetchEditorPage: React.FC = () => {
+  const [pageData, setPageData] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/EditorPage');
+      setPageData(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Handle error state
+    }
+  };
+
+  return (
+    <div>
+      <h1>Editor Page Data</h1>
+      {pageData.map((page: any) => (
+        <div key={page.id}>
+          <h3>{page.pageName}</h3>
+          <p>Status: {page.status}</p>
+          <div dangerouslySetInnerHTML={{ __html: page.content }} />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default FetchEditorPage;
+.........................................................................................................................................................
+
+
+ckeditor2
+
+
+after fecth data
+
+app.js
+const express = require('express');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+const cors = require('cors');
+
+const app = express();
+const port = 3001;
+
+app.use(cors());
+app.use(bodyParser.json());
+
+// Create a connection to the database
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'editorpage',
+});
+
+// Connect to the database
+db.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database:', err);
+    return;
+  }
+  console.log('Connected to the MySQL database.');
+});
+
+// API endpoint to save page details
+app.post('/EditorPage', (req, res) => {
+  const { pageName, content, status } = req.body;
+
+  const query = 'INSERT INTO pages (pageName, content, status) VALUES (?, ?, ?)';
+  db.query(query, [pageName, content, status], (err, result) => {
+    if (err) {
+      console.error('Error inserting data:', err);
+      res.status(500).send('Error inserting data');
+      return;
+    }
+    res.status(200).send('Page saved successfully!');
+  });
+});
+
+
+
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+
+
+
+
+// API endpoint to fetch page details
+app.get('/EditorPage', (req, res) => {
+    const query = 'SELECT id, pageName, content, status FROM pages';
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error fetching data:', err);
+        res.status(500).send('Error fetching data');
+        return;
+      }
+      res.status(200).json(results);
+    });
+  });
+
+
+CKEditorComponent.tsx
+
+// src/components/CKEditorComponent.tsx
+
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+interface CKEditorComponentProps {
+  onChange: (content: string) => void;
+  initialValue?: string;
+}
+
+const CKEditorComponent: React.FC<CKEditorComponentProps> = ({ onChange, initialValue }) => {
+  const [editorContent, setEditorContent] = useState(initialValue || '');
+
+  const handleEditorChange = (_event: any, editor: any) => {
+    const data = editor.getData();
+    setEditorContent(data);
+    onChange(data);
+  };
+
+  return (
+    <CKEditor
+      editor={ClassicEditor}
+      data={editorContent}
+      onChange={handleEditorChange}
+    />
+  );
+};
+
+export default CKEditorComponent;
+
+
+
+
+Editorpage.tsx
+
+// src/pages/EditorPage.tsx
+import React, { useState } from 'react';
+import { TextField, FormControl, Select, MenuItem, Button, Box, SelectChangeEvent, Typography } from '@mui/material';
+import axios from 'axios';
+import CKEditorComponent from '../components/CKEditorComponent';
+
+const EditorPage: React.FC = () => {
+  const [pageName, setPageName] = useState<string>('');
+  const [status, setStatus] = useState<string>('Active');
+  const [content, setContent] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+
+  
+
+  // Function to fetch pages from API
+
+  const handleEditorChange = (content: string) => {
+    console.log('Editor content:', content);
+    setContent(content);
+  };
+
+  const handlePageNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPageName(event.target.value);
+  };
+
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
+    setStatus(event.target.value as string);
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+
+    if (!pageName.trim()) {
+      setError('Page Name is required.');
+      return;
+    }
+
+    if (!content.trim()) {
+      setError('Content is required.');
+      return;
+    }
+
+    if (!status) {
+      setError('Status is required.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:3001/EditorPage', {
+        pageName,
+        content,
+        status
+      });
+      console.log(response.data);
+      alert('Page saved successfully!');
+      setPageName('');
+      setContent('');
+      setStatus('Active');
+    } catch (error) {
+      console.error('Error saving page:', error);
+      setError('Failed to save page. Please try again.');
+    }
+  };
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Editor Page
+      </Typography>
+
+      {error && (
+        <Typography variant="body1" color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Page Name
+        </Typography>
+        <TextField
+          variant="outlined"
+          fullWidth
+          value={pageName}
+          onChange={handlePageNameChange}
+          sx={{ mb: 2 }}
+          error={!pageName.trim() && Boolean(error)}
+          helperText={!pageName.trim() && Boolean(error) ? 'Page Name is required.' : ''}
+        />
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Page Content
+        </Typography>
+        <CKEditorComponent onChange={handleEditorChange} initialValue={content} />
+        {!content.trim() && Boolean(error) && (
+          <Typography variant="body2" color="error">
+            Content is required.
+          </Typography>
+        )}
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Status
+        </Typography>
+        <FormControl variant="outlined" fullWidth error={!status && Boolean(error)}>
+          <Select
+            value={status}
+            onChange={handleStatusChange}
+            displayEmpty
+          >
+            <MenuItem value="Active">Active</MenuItem>
+            <MenuItem value="Inactive">Inactive</MenuItem>
+            <MenuItem value="Pending">Pending</MenuItem>
+          </Select>
+          {!status && Boolean(error) && (
+            <Typography variant="body2" color="error">
+              Status is required.
+            </Typography>
+          )}
+        </FormControl>
+      </Box>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSubmit}
+        sx={{ mt: 3 }}
+      >
+        Save
+      </Button>
+    </Box>
+  );
+};
+
+export default EditorPage;
+
+
+
+
+FetchEditorPage.tsx
+// FetchEditorPage.tsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const FetchEditorPage: React.FC = () => {
+  const [pageData, setPageData] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/EditorPage');
+      setPageData(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Handle error state
+    }
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-2xl font-bold text-center mb-6">Editor Page Data</h1>
+      {pageData.length > 0 ? (
+        pageData.map((page: any) => (
+          <div
+            key={page.id}
+            className="bg-white shadow-md rounded-lg p-4 mb-4 hover:shadow-lg transition-shadow duration-300"
+          >
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">{page.pageName}</h3>
+            <p className="text-sm font-medium mb-4">
+              Status: {page.status}
+            </p>
+            <div
+              className="prose max-w-full"
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500">No page data available.</p>
+      )}
+    </div>
+  );
+};
+
+export default FetchEditorPage;
+
+
+
+................................................................................................................................................................
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+// Adjust the path as per your project structure
+
+const CKEditorComponent = ({ onChange, initialValue }) => {
+  const [editorContent, setEditorContent] = useState(initialValue || '');
+
+  const handleEditorChange = (_event: any, editor: { getData: () => any; }) => {
+    const data = editor.getData();
+    setEditorContent(data);
+    onChange(data);
+  };
+
+  const editorConfig = {
+    ckfinder: {
+      uploadUrl: 'http://localhost:3001/upload' // Replace with your backend upload endpoint
+    }
+  };
+
+  return (
+    <CKEditor
+      editor={ClassicEditor}
+      data={editorContent}
+      onChange={handleEditorChange}
+      config={editorConfig}
+    />
+  );
+};
+
+export default CKEditorComponent;
+.......................................................................................................................................
+
+
+
+
+
+

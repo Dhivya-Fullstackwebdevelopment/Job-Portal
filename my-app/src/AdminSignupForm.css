@@ -1,0 +1,49 @@
+/* src/App.css or src/AdminSignupForm.css */
+.signup-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 1em;
+    background: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .signup-form h2 {
+    margin-bottom: 1em;
+  }
+  
+  .form-control {
+    margin-bottom: 1em;
+  }
+  
+  .form-control label {
+    display: block;
+    margin-bottom: 0.5em;
+  }
+  
+  .form-control input {
+    width: 100%;
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .error {
+    color: red;
+    font-size: 0.8em;
+    margin-top: 0.5em;
+  }
+  
+  button {
+    padding: 0.7em 1.5em;
+    background: #007bff;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:disabled {
+    background: #ccc;
+  }
+  

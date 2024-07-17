@@ -1,0 +1,51 @@
+/* Footer.css */
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #333;
+    color: #fff;
+    padding: 20px 0;
+}
+
+.footer .container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.left-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 20px;
+}
+
+.footer .logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.footer-logo {
+    width: 40px;
+    height: auto;
+    margin-right: 10px;
+}
+
+.logo-text {
+    font-size: 1.2rem;
+}
+
+.copyright {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.contact-details {
+    margin-top: 10px; /* Adjust spacing from copyright */
+}
+
+.contact-details p {
+    margin: 5px 0; /* Adjust paragraph margins */
+}

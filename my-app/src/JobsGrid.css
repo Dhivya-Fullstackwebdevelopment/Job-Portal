@@ -1,0 +1,74 @@
+/* JobsGrid.css */
+
+.jobs-grid {
+    padding: 20px;
+}
+
+.jobs-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 20px;
+}
+
+.job-card {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+}
+
+.logo-box {
+    width: 150px; /* Adjust the width as needed */
+    height: 150px; /* Adjust the height as needed */
+    background-color: #e0e0e0; /* Background color for the logo box */
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 20px; /* Space between logo box and job details */
+}
+
+.job-logo {
+    width: 150px; /* Ensure the logo fits within the logo box */
+    height: 150px; /* Ensure the logo fits within the logo box */
+    object-fit: contain; /* Maintain aspect ratio without distortion */
+    border-radius: 5px; /* Rounded corners for the logo */
+}
+
+.job-details {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .jobs-container {
+        grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
+    }
+}
+
+
+
+
+
+
+.search-bar {
+    margin-bottom: 20px;
+}
+
+.search-bar input[type="text"] {
+    width: 300px; /* Adjust the width as per your design */
+    padding: 8px; /* Adjust padding for a compact look */
+    font-size: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-bar input[type="text"]:focus {
+    border-color: #80bdff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+

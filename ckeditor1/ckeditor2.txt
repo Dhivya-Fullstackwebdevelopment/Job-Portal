@@ -1,0 +1,426 @@
+ckeditor2
+
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+interface CKEditorComponentProps {
+  onChange: (content: string) => void;
+  initialValue?: string;
+}
+
+const CKEditorComponent: React.FC<CKEditorComponentProps> = ({ onChange, initialValue }) => {
+  const [editorContent, setEditorContent] = useState(initialValue || '');
+
+  const handleEditorChange = (_event: any, editor: any) => {
+    const data = editor.getData();
+    setEditorContent(data);
+    onChange(data);
+  };
+
+  const handleCaseChange = (caseType: 'uppercase' | 'lowercase' | 'capitalize') => {
+    let updatedContent = editorContent;
+    switch (caseType) {
+      case 'uppercase':
+        updatedContent = `<span class="uppercase">${editorContent.toUpperCase()}</span>`;
+        break;
+      case 'lowercase':
+        updatedContent = `<span class="lowercase">${editorContent.toLowerCase()}</span>`;
+        break;
+      case 'capitalize':
+        updatedContent = `<span class="capitalize">${editorContent.replace(/\b\w/g, (char) => char.toUpperCase())}</span>`;
+        break;
+      default:
+        break;
+    }
+    setEditorContent(updatedContent);
+    onChange(updatedContent);
+  };
+
+  const handleDropdownChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const caseType = event.target.value as 'uppercase' | 'lowercase' | 'capitalize';
+    handleCaseChange(caseType);
+  };
+
+  const editorConfig = {
+    ckfinder: {
+      uploadUrl: 'http://localhost:3001/upload', // Ensure this matches your backend upload endpoint
+    },
+    toolbar: [
+      'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote',
+      '|', 'imageUpload', 'insertTable', 'tableColumn', 'tableRow', 'mergeTableCells',
+      '|', 'undo', 'redo', 'fontColor', 'fontBackgroundColor',
+    ],
+    image: {
+      toolbar: [
+        'imageTextAlternative', 'imageStyle:full', 'imageStyle:side'
+      ]
+    },
+    table: {
+      contentToolbar: [
+        'tableColumn', 'tableRow', 'mergeTableCells'
+      ]
+    },
+  };
+
+  return (
+    <div className="editor-container">
+      <div className="sticky-panel">
+        <div className="text-transform-panel">
+          <select onChange={handleDropdownChange}>
+            <option value="uppercase">Uppercase</option>
+            <option value="lowercase">Lowercase</option>
+            <option value="capitalize">Capitalize</option>
+          </select>
+        </div>
+        {/* Add the CKEditor here */}
+        <div className="editor-wrapper">
+          <CKEditor
+            editor={ClassicEditor}
+            data={editorContent}
+            onChange={handleEditorChange}
+            config={editorConfig}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CKEditorComponent;
+import React, { useState } from 'react';
+import { TextField, FormControl, Select, MenuItem, Button, Box, SelectChangeEvent, Typography } from '@mui/material';
+import axios from 'axios';
+import CKEditorComponent from '../components/CKEditorComponent';
+
+const EditorPage: React.FC = () => {
+  const [pageName, setPageName] = useState<string>('');
+  const [status, setStatus] = useState<string>('Active');
+  const [content, setContent] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+
+  const handleEditorChange = (content: string) => {
+    setContent(content);
+  };
+
+  const handlePageNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPageName(event.target.value);
+  };
+
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
+    setStatus(event.target.value as string);
+  };
+
+
+  const handleSubmit = async () => {
+    setError(null);
+
+    if (!pageName.trim()) {
+      setError('Page Name is required.');
+      return;
+    }
+
+    if (!content.trim()) {
+      setError('Content is required.');
+      return;
+    }
+
+    if (!status) {
+      setError('Status is required.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:3001/EditorPage', {
+        pageName,
+        content,
+        status
+      });
+      console.log(response.data);
+      alert('Page saved successfully!');
+      setPageName('');
+      setContent('');
+      setStatus('Active');
+    } catch (error) {
+      console.error('Error saving page:', error);
+      setError('Failed to save page. Please try again.');
+    }
+  };
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Editor Page
+      </Typography>
+
+      {error && (
+        <Typography variant="body1" color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Page Name
+        </Typography>
+        <TextField
+          variant="outlined"
+          fullWidth
+          value={pageName}
+          onChange={handlePageNameChange}
+          sx={{ mb: 2 }}
+          error={!pageName.trim() && Boolean(error)}
+          helperText={!pageName.trim() && Boolean(error) ? 'Page Name is required.' : ''}
+        />
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Page Content
+        </Typography>
+        <CKEditorComponent onChange={handleEditorChange} initialValue={content} />
+        {!content.trim() && Boolean(error) && (
+          <Typography variant="body2" color="error">
+            Content is required.
+          </Typography>
+        )}
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Status
+        </Typography>
+        <FormControl variant="outlined" fullWidth error={!status && Boolean(error)}>
+          <Select
+            value={status}
+            onChange={handleStatusChange}
+            displayEmpty
+          >
+            <MenuItem value="Active">Active</MenuItem>
+            <MenuItem value="Inactive">Inactive</MenuItem>
+            <MenuItem value="Pending">Pending</MenuItem>
+          </Select>
+          {!status && Boolean(error) && (
+            <Typography variant="body2" color="error">
+              Status is required.
+            </Typography>
+          )}
+        </FormControl>
+      </Box>
+
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSubmit}
+        sx={{ mt: 3 }}
+      >
+        Save
+      </Button>
+    </Box>
+  );
+};
+
+export default EditorPage;
+
+
+
+
+
+
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const port = 3001;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('uploads')); // Serve uploaded files statically
+
+// MySQL Database Connection
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'editorpage',
+});
+
+db.connect(err => {
+  if (err) {
+    console.error('Error connecting to the database:', err);
+    return;
+  }
+  console.log('Connected to the MySQL database.');
+});
+
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage });
+
+// API Endpoint to save page details
+app.post('/EditorPage', (req, res) => {
+  const { pageName, content, status } = req.body;
+
+  const query = 'INSERT INTO pages (pageName, content, status) VALUES (?, ?, ?)';
+  db.query(query, [pageName, content, status], (err, result) => {
+    if (err) {
+      console.error('Error inserting data:', err);
+      res.status(500).send('Error inserting data');
+      return;
+    }
+    res.status(200).send('Page saved successfully!');
+  });
+});
+
+// API Endpoint to fetch page details
+app.get('/EditorPage', (req, res) => {
+  const query = 'SELECT id, pageName, content, status FROM pages';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching data:', err);
+      res.status(500).send('Error fetching data');
+      return;
+    }
+    res.status(200).json(results);
+  });
+});
+
+// API Endpoint to handle file uploads
+app.post('/upload', upload.single('upload'), (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  console.log(file); // For debugging
+  res.json({ url: `/uploads/${file.filename}` }); // Return the URL of the uploaded file
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
+............................................................................................................................................
+app.js
+
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const uploadDir = path.join(__dirname, 'uploads');
+
+// Ensure the uploads directory exists
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+// Middleware
+app.use(cors());
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload', upload.single('upload'), (req, res) => {
+  const file = req.file;
+  if (!file) {
+    console.log('No file uploaded.');
+    return res.status(400).send('No file uploaded.');
+  }
+  console.log('File uploaded successfully:', file);
+  const url = `/uploads/${file.filename}`;
+  res.json({
+    uploaded: true,
+    url: url
+  });
+});
+
+app.use('/uploads', express.static(uploadDir));
+
+app.listen(3000, () => console.log('Server started on port 3000'));
+
+
+
+
+Editorpage1.........
+import React, { useState } from 'react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+const CKEditorComponent = () => {
+  const [editorData, setEditorData] = useState('');
+
+  const handleEditorChange = (_event: any, editor: { getData: () => any; }) => {
+    const data = editor.getData();
+    setEditorData(data);
+    console.log('Editor Data:', data);
+  };
+
+  return (
+    <div className="editor-container">
+      <h2>CKEditor 5 with React</h2>
+      <CKEditor
+        editor={ClassicEditor}
+        data="<p>Type your content here...</p>"
+        onChange={handleEditorChange}
+        config={{
+          ckfinder: {
+            uploadUrl: 'http://localhost:3000/upload'
+          },
+          toolbar: [
+            'heading', '|',
+            'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|',
+            'undo', 'redo', '|',
+            'imageUpload'
+          ],
+          language: 'en',
+          image: {
+            toolbar: [
+              'imageTextAlternative', 'imageStyle:full', 'imageStyle:side'
+            ]
+          }
+        }}
+      />
+      <div className="editor-content">
+        <h3>Content</h3>
+        <div dangerouslySetInnerHTML={{ __html: editorData }} />
+      </div>
+    </div>
+  );
+};
+
+export default CKEditorComponent;
+

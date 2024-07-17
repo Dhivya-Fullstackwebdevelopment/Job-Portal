@@ -1,0 +1,86 @@
+/* Ensure these styles match your project's design */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px; /* Reduced gap */
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.text h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #333;
+}
+
+.text p {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+
+
+
+
+
+
+
+
+
+/* Style for the button in HomePage */
+.text .btn {
+    margin-top: 20px;
+    padding: 10px 20px; /* Space around the text */
+    background-color: #007bff; /* Button background color */
+    color: white; /* Text color */
+    text-decoration: none; /* Remove underline */
+    border-radius: 4px; /* Rounded corners */
+    transition: background-color 0.3s, transform 0.3s; /* Smooth background color and scale change */
+    text-align: center; /* Center the text */
+    display: inline-block; /* Required for padding to apply properly */
+    font-size: 1rem; /* Text size */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+
+.text .btn:hover {
+    background-color: #0056b3; /* Darker blue for hover state */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
+
+.text .btn:active {
+    background-color: #004085; /* Even darker blue for active state */
+    transform: scale(1); /* Return to original size */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Less shadow when active */
+}
+
+.text .btn:focus {
+    outline: none; /* Remove default outline */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5); /* Custom focus outline */
+}
+

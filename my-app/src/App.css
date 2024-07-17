@@ -1,0 +1,71 @@
+/* App.css */
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Space between logo and navigation */
+  padding: 10px 20px; /* Adjust padding as needed */
+  background-color: #6655ff;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: 50px; /* Adjust the size as needed */
+  height: auto; /* Maintain aspect ratio */
+  margin-right: 10px; /* Space between logo and the text */
+}
+
+.logo-text {
+  font-size: 24px; /* Adjust font size */
+  color: rgb(0, 0, 0); /* Text color */
+  font-weight: bold; /* Bold text */
+  text-decoration: none; /* Remove underline */
+  font-family: 'Arial', sans-serif; /* Set font family */
+}
+
+header nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+header nav ul li {
+  margin-right: 15px;
+}
+
+header nav ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  line-height: 1.5;
+  padding: 5px 10px;
+  margin-right: 15px;
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+}
+
+header nav ul li a:hover {
+  background-color: white; /* Background color on hover */
+  color: #6655ff; /* Text color on hover */
+  border-radius: 5px; /* Rounded corners on hover */
+}
+
+header nav ul li .logout-button {
+  background-color: rgb(156, 78, 78); /* Background color for logout button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+}
+
+header nav ul li .logout-button:hover {
+  background-color: rgb(146, 64, 64); /* Background color on hover */
+  color: white;
+}

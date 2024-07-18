@@ -44,7 +44,7 @@ const App = () => {
                                 {isAuthenticated ? (
                                     <>
                                         <li><Link to="/">Home Pageee</Link></li>
-                                        <li><Link to="/jobs">Search Jobs</Link></li>
+                                        <li><Link to="/jobs">Search Jobss</Link></li>
                                         <li><Link to="/JobRegistrationForm">Post Jobs</Link></li>
                                         <li><Link to="/JobRegistrationFormFetch">JobDetails</Link></li>
                                         {isAdmin && <li><Link to="/admin">Admin</Link></li>}
